@@ -96,7 +96,6 @@ func (l *Lexer) advance() byte {
 		return 0
 	}
 	b := l.input[l.offset]
-	l.offset++
 	if b == '\n' {
 		l.line++
 		l.column = 1
