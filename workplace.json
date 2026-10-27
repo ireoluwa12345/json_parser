@@ -1,0 +1,49 @@
+{
+  "workplace": {
+    "name": "Northstar Design Studio",
+    "location": {
+      "city": "Lagos",
+      "country": "Nigeria"
+    },
+    "timezone": "Africa/Lagos"
+  },
+  "departments": [
+    {
+      "name": "Product Design",
+      "employees": [
+        {
+          "employeeId": "EMP-2041",
+          "name": "Mina Yusuf",
+          "role": "Product Designer",
+          "email": "mina@example.test",
+          "active": true,
+          "skills": ["research", "prototyping", "accessibility"],
+          "projects": ["Atlas", "Orchid"]
+        },
+        {
+          "employeeId": "EMP-2042",
+          "name": "David Mensah",
+          "role": "Design Lead",
+          "email": "david@example.test",
+          "active": true,
+          "skills": ["leadership", "design systems"],
+          "projects": ["Atlas"]
+        }
+      ]
+    },
+    {
+      "name": "Operations",
+      "employees": [
+        {
+          "employeeId": "EMP-2077",
+          "name": "Kemi Adebayo",
+          "role": "Operations Coordinator",
+          "email": "kemi@example.test",
+          "active": false,
+          "skills": ["planning", "vendor management"],
+          "projects": []
+        }
+      ]
+    }
+  ]
+}

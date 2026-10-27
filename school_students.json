@@ -1,0 +1,51 @@
+{
+  "school": {
+    "name": "Riverside Community School",
+    "district": "North District",
+    "academicYear": "2026-2027"
+  },
+  "students": [
+    {
+      "studentId": "STU-1001",
+      "name": {
+        "first": "Amara",
+        "last": "Okafor"
+      },
+      "grade": 8,
+      "enrolled": true,
+      "guardian": {
+        "name": "Chika Okafor",
+        "email": "chika@example.test"
+      },
+      "courses": ["Mathematics", "English", "Basic Science"],
+      "attendancePercent": 96.5
+    },
+    {
+      "studentId": "STU-1002",
+      "name": {
+        "first": "Tunde",
+        "last": "Bello"
+      },
+      "grade": 10,
+      "enrolled": true,
+      "guardian": {
+        "name": "Sade Bello",
+        "email": "sade@example.test"
+      },
+      "courses": ["Biology", "Chemistry", "Mathematics"],
+      "attendancePercent": 91.25
+    },
+    {
+      "studentId": "STU-1003",
+      "name": {
+        "first": "Nneka",
+        "last": "James"
+      },
+      "grade": 6,
+      "enrolled": false,
+      "guardian": null,
+      "courses": [],
+      "attendancePercent": 0
+    }
+  ]
+}
