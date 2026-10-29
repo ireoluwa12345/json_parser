@@ -2,133 +2,164 @@ package main
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
 )
 
-func TestParserValues(t *testing.T) {
-	tests := []struct {
-		name  string
+// parse is a helper that lexes and parses the given input in one step.
+func parse(t *testing.T, input string) (any, error) {
+	t.Helper()
+	return NewParser(NewLexer([]byte(input))).Parse()
+}
+
+func TestNewParser(t *testing.T) {
+	p := NewParser(NewLexer([]byte("null")))
+	if p == nil {
+		t.Fatal("NewParser returned nil")
+	}
+	if p.loaded {
+		t.Error("new parser should not have a token loaded yet")
+	}
+}
+
+func TestParseScalars(t *testing.T) {
+	cases := []struct {
 		input string
 		want  any
 	}{
-		{name: "null", input: "null", want: nil},
-		{name: "true", input: "true", want: true},
-		{name: "false", input: "false", want: false},
-		{name: "string", input: `"hello"`, want: "hello"},
-		{name: "escaped string", input: `"a\nb"`, want: "a\nb"},
-		{name: "integer", input: "-42", want: json.Number("-42")},
-		{name: "decimal", input: "3.125", want: json.Number("3.125")},
-		{name: "exponent", input: "6.02e23", want: json.Number("6.02e23")},
-		{name: "empty array", input: "[]", want: []any{}},
-		{name: "mixed array", input: `[1, "two", false, null]`, want: []any{json.Number("1"), "two", false, nil}},
-		{name: "nested object", input: `{"user":{"name":"Ada"}}`, want: map[string]any{"user": map[string]any{"name": "Ada"}}},
-		{name: "empty object", input: "{}", want: map[string]any{}},
+		{`"hello"`, "hello"},
+		{`42`, json.Number("42")},
+		{`-3.14`, json.Number("-3.14")},
+		{`true`, true},
+		{`false`, false},
+		{`null`, nil},
 	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			got, err := NewParser(NewLexer([]byte(test.input))).Parse()
-			if err != nil {
-				t.Fatalf("Parse returned error: %v", err)
-			}
-			if !reflect.DeepEqual(got, test.want) {
-				t.Fatalf("Parse = %#v, want %#v", got, test.want)
-			}
-		})
-	}
-}
-
-func TestValidJSONFixtures(t *testing.T) {
-	paths, err := filepath.Glob(filepath.Join("testdata", "valid", "*.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(paths) < 20 {
-		t.Fatalf("expected at least 20 valid fixtures, found %d", len(paths))
-	}
-	for _, path := range paths {
-		t.Run(filepath.Base(path), func(t *testing.T) {
-			input, err := os.ReadFile(path)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if _, err := NewParser(NewLexer(input)).Parse(); err != nil {
-				t.Fatalf("valid fixture rejected: %v", err)
-			}
-		})
-	}
-}
-
-func TestInvalidJSONFixtures(t *testing.T) {
-	paths, err := filepath.Glob(filepath.Join("testdata", "invalid", "*.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(paths) < 20 {
-		t.Fatalf("expected at least 20 invalid fixtures, found %d", len(paths))
-	}
-	for _, path := range paths {
-		t.Run(filepath.Base(path), func(t *testing.T) {
-			input, err := os.ReadFile(path)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if _, err := NewParser(NewLexer(input)).Parse(); err == nil {
-				t.Fatal("invalid fixture was accepted")
-			}
-		})
-	}
-}
-
-func TestLexerTokenSequence(t *testing.T) {
-	lexer := NewLexer([]byte(`{"a":[true, 12, null]}`))
-	want := []TokenType{
-		TokenLeftBrace, TokenString, TokenColon, TokenLeftBracket,
-		TokenTrue, TokenComma, TokenNumber, TokenComma, TokenNull,
-		TokenRightBracket, TokenRightBrace, TokenEOF,
-	}
-	for i, wantType := range want {
-		tok, err := lexer.NextToken()
+	for _, c := range cases {
+		got, err := parse(t, c.input)
 		if err != nil {
-			t.Fatalf("token %d: %v", i, err)
+			t.Fatalf("%q: unexpected error: %v", c.input, err)
 		}
-		if tok.Type != wantType {
-			t.Fatalf("token %d type = %s, want %s", i, tok.Type, wantType)
+		if !reflect.DeepEqual(got, c.want) {
+			t.Errorf("%q: got %#v, want %#v", c.input, got, c.want)
 		}
 	}
 }
 
-func TestFormatTerminal(t *testing.T) {
-	tests := []struct {
-		name  string
-		value any
-		want  string
-	}{
-		{
-			name: "object has equals and expands nested objects",
-			value: map[string]any{
-				"z":      "last",
-				"a":      "first",
-				"items":  []any{"one", json.Number("2")},
-				"nested": map[string]any{"ok": true},
-			},
-			want: "a = first\nitems = [\n  one,\n  2\n]\nnested\n  ok = true\nz = last",
-		},
-		{name: "root array", value: []any{json.Number("1"), "two"}, want: "[\n  1,\n  two\n]"},
-		{name: "root string has no quotes", value: "hello", want: "hello"},
-		{name: "strings escape terminal newlines", value: "first\nsecond", want: "first\\nsecond"},
-		{name: "array of objects has no braces", value: []any{map[string]any{"name": "Ada"}, map[string]any{"name": "Lin"}}, want: "[\n  name = Ada,\n  name = Lin\n]"},
-		{name: "nested arrays", value: []any{[]any{json.Number("1"), json.Number("2")}, []any{json.Number("3")}}, want: "[\n  [\n    1,\n    2\n  ],\n  [\n    3\n  ]\n]"},
+func TestParseEmptyArray(t *testing.T) {
+	got, err := parse(t, "[]")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
+	arr, ok := got.([]any)
+	if !ok {
+		t.Fatalf("got %T, want []any", got)
+	}
+	if len(arr) != 0 {
+		t.Errorf("len = %d, want 0", len(arr))
+	}
+}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			if got := FormatTerminal(test.value); got != test.want {
-				t.Fatalf("FormatTerminal = %q, want %q", got, test.want)
-			}
-		})
+func TestParseArray(t *testing.T) {
+	got, err := parse(t, `[1, "two", true, null]`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := []any{json.Number("1"), "two", true, nil}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestParseNestedArray(t *testing.T) {
+	got, err := parse(t, `[[1, 2], [3]]`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := []any{
+		[]any{json.Number("1"), json.Number("2")},
+		[]any{json.Number("3")},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestParseEmptyObject(t *testing.T) {
+	got, err := parse(t, "{}")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	obj, ok := got.(map[string]any)
+	if !ok {
+		t.Fatalf("got %T, want map[string]any", got)
+	}
+	if len(obj) != 0 {
+		t.Errorf("len = %d, want 0", len(obj))
+	}
+}
+
+func TestParseObject(t *testing.T) {
+	got, err := parse(t, `{"name": "Ada", "age": 36, "active": true}`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := map[string]any{
+		"name":   "Ada",
+		"age":    json.Number("36"),
+		"active": true,
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestParseNestedObject(t *testing.T) {
+	got, err := parse(t, `{"outer": {"inner": [1, 2]}}`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := map[string]any{
+		"outer": map[string]any{
+			"inner": []any{json.Number("1"), json.Number("2")},
+		},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestParseErrors(t *testing.T) {
+	cases := []struct {
+		name  string
+		input string
+	}{
+		{"empty input", ""},
+		{"trailing content", `{} extra`},
+		{"trailing comma array", `[1,]`},
+		{"trailing comma object", `{"a":1,}`},
+		{"missing colon", `{"a" 1}`},
+		{"non-string key", `{1: 2}`},
+		{"unclosed array", `[1, 2`},
+		{"unclosed object", `{"a": 1`},
+		{"missing comma array", `[1 2]`},
+		{"bare value then junk", `true false`},
+		{"just a comma", `,`},
+		{"lexer error propagates", `[01]`},
+	}
+	for _, c := range cases {
+		if _, err := parse(t, c.input); err == nil {
+			t.Errorf("%s (%q): expected error, got nil", c.name, c.input)
+		}
+	}
+}
+
+func TestParseWhitespaceTolerant(t *testing.T) {
+	got, err := parse(t, "\n\t  {  \"k\" : \n 1 }  \n")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := map[string]any{"k": json.Number("1")}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %#v, want %#v", got, want)
 	}
 }

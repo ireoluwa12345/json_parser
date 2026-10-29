@@ -1,0 +1,76 @@
+{
+"market": "Global Fake Stock Exchange (GFSX)",
+"timestamp": "2026-10-28T08:28:00Z",
+"currency": "USD",
+"stock_count": 4,
+"stocks": [
+{
+"ticker": "NVRT",
+"company_name": "NovaTek Robotics Corp.",
+"sector": "Technology",
+"price": 342.75,
+"change": {
+"amount": 12.50,
+"percentage": 3.78,
+"direction": "up"
+},
+"day_high": 345.10,
+"day_low": 328.00,
+"volume": 12450800,
+"market_cap_billions": 142.5,
+"dividend_yield": null,
+"trading_halted": false
+},
+{
+"ticker": "GRNE",
+"company_name": "GreenEarth Biofuels",
+"sector": "Energy",
+"price": 18.42,
+"change": {
+"amount": -0.88,
+"percentage": -4.56,
+"direction": "down"
+},
+"day_high": 19.50,
+"day_low": 18.10,
+"volume": 3210400,
+"market_cap_billions": 3.2,
+"dividend_yield": 1.85,
+"trading_halted": false
+},
+{
+"ticker": "ORBT",
+"company_name": "Orbital Logistics Inc.",
+"sector": "Aerospace",
+"price": 89.10,
+"change": {
+"amount": 0.00,
+"percentage": 0.00,
+"direction": "unchanged"
+},
+"day_high": 89.50,
+"day_low": 88.90,
+"volume": 850200,
+"market_cap_billions": 18.9,
+"dividend_yield": 0.50,
+"trading_halted": true
+},
+{
+"ticker": "PNSL",
+"company_name": "Peninsula Hospitality",
+"sector": "Consumer Discretionary",
+"price": 4.15,
+"change": {
+"amount": 0.22,
+"percentage": 5.60,
+"direction": "up"
+},
+"day_high": 4.20,
+"day_low": 3.90,
+"volume": 45000100,
+"market_cap_billions": 0.45,
+"dividend_yield": null,
+"trading_halted": false
+}
+]
+}
