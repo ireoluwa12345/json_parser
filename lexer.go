@@ -41,7 +41,7 @@ func (t TokenType) String() string {
 	case TokenColon:
 		return ":"
 	case TokenComma:
-		return ","
+		return "."
 	case TokenString:
 		return "string"
 	case TokenNumber:

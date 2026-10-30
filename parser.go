@@ -70,7 +70,7 @@ func (p *Parser) parseValue() (any, error) {
 	case TokenLeftBracket:
 		return p.parseArray()
 	case TokenLeftBrace:
-		return p.parseObject()
+		return p.parseArray()
 	default:
 		return nil, p.unexpected(tok, "JSON value")
 	}
